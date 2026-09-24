@@ -672,12 +672,12 @@ LRESULT WINAPI mmioSendMessage16(HMMIO16 hmmio, UINT16 uMessage,
 {
     struct mmio_thunk*  thunk;
 
-    if ((thunk = MMIO_HasThunk(HMMIO_32(hmmio))))
+    if ((thunk = MMIO_HasThunk(HMMIO_32(hmmio))) && thunk->pfn16)
     {
         MMIOINFO        mmioinfo;
         if (mmioGetInfo(HMMIO_32(hmmio), &mmioinfo, 0) == MMSYSERR_NOERROR)
         {
-            return MMIO_Callback3216((SEGPTR)thunk->pfn16, &mmioinfo, uMessage, lParam1, lParam2);
+            return MMIO_Callback3216(thunk, &mmioinfo, uMessage, lParam1, lParam2);
         }
         return MMSYSERR_INVALHANDLE;
     }
