@@ -56,6 +56,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(driver);
 
+LPCSTR RedirectSystemDir(LPCSTR path, LPSTR to, size_t max_len);
+
 typedef struct tagWINE_DRIVER
 {
     /* as usual LPWINE_DRIVER == hDriver32 */
@@ -273,6 +275,9 @@ HDRVR16 WINAPI DrvOpen16(LPCSTR lpDriverName, LPCSTR lpSectionName, LPARAM lPara
 
     if (!lpDriverName || !*lpDriverName) return 0;
 
+    char sysini[MAX_PATH];
+    LPCSTR inipath = RedirectSystemDir("c:\\windows\\system.ini", sysini, MAX_PATH);
+
     if (lpSectionName == NULL) {
 	strcpy(drvName, lpDriverName);
 
@@ -282,7 +287,7 @@ HDRVR16 WINAPI DrvOpen16(LPCSTR lpDriverName, LPCSTR lpSectionName, LPARAM lPara
 	lpSectionName = "Drivers";
     }
     if (GetPrivateProfileStringA(lpSectionName, lpDriverName, "",
-				 drvName, sizeof(drvName), "SYSTEM.INI") > 0) {
+				 drvName, sizeof(drvName), inipath) > 0) {
 	lpDrv = DRIVER_TryOpenDriver16(drvName, lParam2);
     }
     if (!lpDrv)
@@ -291,13 +296,13 @@ HDRVR16 WINAPI DrvOpen16(LPCSTR lpDriverName, LPCSTR lpSectionName, LPARAM lPara
         {
             // if 32bit driver exists pretend success
             if (GetPrivateProfileStringA("drivers32", lpDriverName, "",
-		        		 drvName, sizeof(drvName), "SYSTEM.INI") > 0)
+		        		 drvName, sizeof(drvName), inipath) > 0)
                 return 0xdead;
         }
         else if (!stricmp(lpSectionName, "mci"))
         {
             if (GetPrivateProfileStringA("mci32", lpDriverName, "",
-		        		 drvName, sizeof(drvName), "SYSTEM.INI") > 0)
+		        		 drvName, sizeof(drvName), inipath) > 0)
                 return 0xdead;
         }
         TRACE("Failed to open driver %s from system.ini file, section %s\n", debugstr_a(lpDriverName), debugstr_a(lpSectionName));

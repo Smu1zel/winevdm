@@ -2060,8 +2060,23 @@ UINT16 WINAPI GetMenuState16( HMENU16 hMenu, UINT16 wItemID, UINT16 wFlags )
 LRESULT WINAPI SendDriverMessage16(HDRVR16 hDriver, UINT16 msg, LPARAM lParam1,
                                    LPARAM lParam2)
 {
-    FIXME("(%04x, %04x, %08lx, %08lx): stub\n", hDriver, msg, lParam1, lParam2);
-    return 0;
+    static LRESULT (WINAPI *DrvSendMessage16)(HDRVR16, UINT16, LPARAM, LPARAM) = NULL;
+    if (!DrvSendMessage16)
+    {
+        HMODULE mmsystem = GetModuleHandleA("mmsystem.dll16");
+        if (!mmsystem)
+        {
+            ERR("mmsystem not loaded\n");
+            return 0;
+        }
+        DrvSendMessage16 = (LRESULT (WINAPI *)(HDRVR16, UINT16, LPARAM, LPARAM))GetProcAddress(mmsystem, "DrvSendMessage16");
+        if (!DrvSendMessage16)
+        {
+            ERR("DrvSendMessage16 load error\n");
+            return 0;
+        }
+    }
+    return DrvSendMessage16(hDriver, msg, lParam1, lParam2);
 }
 
 
@@ -2070,7 +2085,7 @@ LRESULT WINAPI SendDriverMessage16(HDRVR16 hDriver, UINT16 msg, LPARAM lParam1,
  */
 HDRVR16 WINAPI OpenDriver16(LPCSTR lpDriverName, LPCSTR lpSectionName, LPARAM lParam2)
 {
-    TRACE( "(%s, %s, %08lx): stub\n", debugstr_a(lpDriverName), debugstr_a(lpSectionName), lParam2);
+    TRACE( "(%s, %s, %08lx)\n", debugstr_a(lpDriverName), debugstr_a(lpSectionName), lParam2);
     static HDRVR16 (WINAPI *DrvOpen16)(LPCSTR, LPCSTR, LPARAM) = NULL;
     if (!DrvOpen16)
     {
@@ -2096,8 +2111,23 @@ HDRVR16 WINAPI OpenDriver16(LPCSTR lpDriverName, LPCSTR lpSectionName, LPARAM lP
  */
 LRESULT WINAPI CloseDriver16(HDRVR16 hDrvr, LPARAM lParam1, LPARAM lParam2)
 {
-    FIXME( "(%04x, %08lx, %08lx): stub\n", hDrvr, lParam1, lParam2);
-    return FALSE;
+    static LRESULT (WINAPI *DrvClose16)(HDRVR16, LPARAM, LPARAM) = NULL;
+    if (!DrvClose16)
+    {
+        HMODULE mmsystem = GetModuleHandleA("mmsystem.dll16");
+        if (!mmsystem)
+        {
+            ERR("mmsystem not loaded\n");
+            return FALSE;
+        }
+        DrvClose16 = (LRESULT (WINAPI *)(HDRVR16, LPARAM, LPARAM))GetProcAddress(mmsystem, "DrvClose16");
+        if (!DrvClose16)
+        {
+            ERR("DrvClose16 load error\n");
+            return FALSE;
+        }
+    }
+    return DrvClose16(hDrvr, lParam1, lParam2);
 }
 
 
@@ -2106,8 +2136,23 @@ LRESULT WINAPI CloseDriver16(HDRVR16 hDrvr, LPARAM lParam1, LPARAM lParam2)
  */
 HMODULE16 WINAPI GetDriverModuleHandle16(HDRVR16 hDrvr)
 {
-    FIXME("(%04x): stub\n", hDrvr);
-    return 0;
+    static HMODULE16 (WINAPI *DrvGetModuleHandle16)(HDRVR16) = NULL;
+    if (!DrvGetModuleHandle16)
+    {
+        HMODULE mmsystem = GetModuleHandleA("mmsystem.dll16");
+        if (!mmsystem)
+        {
+            ERR("mmsystem not loaded\n");
+            return 0;
+        }
+        DrvGetModuleHandle16 = (HMODULE16 (WINAPI *)(HDRVR16))GetProcAddress(mmsystem, "DrvGetModuleHandle16");
+        if (!DrvGetModuleHandle16)
+        {
+            ERR("DrvGetModuleHandle16 load error\n");
+            return 0;
+        }
+    }
+    return DrvGetModuleHandle16(hDrvr);
 }
 
 
@@ -2117,9 +2162,23 @@ HMODULE16 WINAPI GetDriverModuleHandle16(HDRVR16 hDrvr)
 LRESULT WINAPI DefDriverProc16(DWORD dwDevID, HDRVR16 hDriv, UINT16 wMsg,
                                LPARAM lParam1, LPARAM lParam2)
 {
-    FIXME( "devID=0x%08x hDrv=0x%04x wMsg=%04x lP1=0x%08lx lP2=0x%08lx: stub\n",
-	  dwDevID, hDriv, wMsg, lParam1, lParam2);
-    return 0;
+    static LRESULT (WINAPI *DrvDefDriverProc16)(DWORD, HDRVR16, UINT16, LPARAM, LPARAM) = NULL;
+    if (!DrvDefDriverProc16)
+    {
+        HMODULE mmsystem = GetModuleHandleA("mmsystem.dll16");
+        if (!mmsystem)
+        {
+            ERR("mmsystem not loaded\n");
+            return 0;
+        }
+        DrvDefDriverProc16 = (LRESULT (WINAPI *)(DWORD, HDRVR16, UINT16, LPARAM, LPARAM))GetProcAddress(mmsystem, "DrvDefDriverProc16");
+        if (!DrvDefDriverProc16)
+        {
+            ERR("DrvDefDriverProc16 load error\n");
+            return 0;
+        }
+    }
+    return DrvDefDriverProc16(dwDevID, hDriv, wMsg, lParam1, lParam2);
 }
 
 
