@@ -694,7 +694,21 @@ LRESULT WINAPI mmioSendMessage16(HMMIO16 hmmio, UINT16 uMessage,
 MMRESULT16 WINAPI mmioDescend16(HMMIO16 hmmio, LPMMCKINFO lpck,
                                 const MMCKINFO* lpckParent, UINT16 uFlags)
 {
-    return mmioDescend(HMMIO_32(hmmio), lpck, lpckParent, uFlags);
+    LONG cur_pos = mmioSeek(HMMIO_32(hmmio), 0, SEEK_CUR);
+    const MMCKINFO *parent = lpckParent;
+    if (parent && cur_pos < (LONG)parent->dwDataOffset)
+    {
+        /* Windows 3.1 quirk: Win16 mmioDescend did not enforce cur_pos >= lpckParent->dwDataOffset.
+         * Some 16-bit apps (e.g. Morphman) reuse the MMCKINFO buffer for idx1, ascend out,
+         * seek back to movi, and pass the idx1 MMCKINFO as lpckParent.
+         * Win32 mmioDescend fails this with MMIOERR_CHUNKNOTFOUND (265), whereas Win16 succeeded.
+         * If cur_pos is before parent->dwDataOffset, ignore parent to preserve Win16 behavior. */
+        WARN("cur_pos %ld < parent->dwDataOffset %lu, ignoring parent for Win16 compat\n",
+             cur_pos, parent->dwDataOffset);
+        parent = NULL;
+    }
+    TRACE("(%04x, %p, %p, %04x)\n", hmmio, lpck, lpckParent, uFlags);
+    return mmioDescend(HMMIO_32(hmmio), lpck, parent, uFlags);
 }
 
 /**************************************************************************
@@ -702,7 +716,7 @@ MMRESULT16 WINAPI mmioDescend16(HMMIO16 hmmio, LPMMCKINFO lpck,
  */
 MMRESULT16 WINAPI mmioAscend16(HMMIO16 hmmio, MMCKINFO* lpck, UINT16 uFlags)
 {
-    return mmioAscend(HMMIO_32(hmmio),lpck,uFlags);
+    return mmioAscend(HMMIO_32(hmmio), lpck, uFlags);
 }
 
 /**************************************************************************
